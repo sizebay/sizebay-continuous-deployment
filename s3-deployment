@@ -1,0 +1,54 @@
+#!/bin/sh
+# Sizebay 2016 - S3 Deployment listener job
+#
+# This script was designed to update the application an EC2 machine
+# is running. Also, it is capable to install your application, if
+# it isn't already installed.
+
+cd `dirname $0`
+
+# LOAD CONFIGURATION
+if [ -f $0.conf ]; then
+    . $0.conf
+else
+    echo "No configuration file found: `basename $0.conf`"
+    exit 1
+fi
+
+. ./s3-tags
+
+# VARIABLES
+app=`instance_tag App`
+artifact="${app}.zip"
+tmp_dir="${tmp_dir:-.}"
+
+if [ "$DEBUG" = "true" ]; then
+cat <<EOF
+INSTANCE ID: $instance_id
+AVAILABILITY ZONE: $availability_zone
+APP: $app
+EOF
+fi
+
+download_artifact(){
+    modification_date="2016-01-01 00:00:00.383363400 +0000"
+    if [ -f $tmp_dir/$artifact ]; then
+        modification_date=`stat -c '%y' $tmp_dir/$artifact`
+    fi
+    aws s3api get-object \
+        --bucket $s3_deployment_bucket \
+        --if-modified-since "$modification_date" \
+        --key $artifact \
+        ${tmp_dir}/$artifact 
+}
+
+try_update_artifact(){
+    $update_script ${tmp_dir}/$artifact \
+        || $failure_script ${tmp_dir}/$artifact
+}
+
+echo "===[ `date` ]=========================================" >> $0.log
+download_artifact 2>> $0.log \
+ && try_update_artifact >> $0.log
+echo >> $0.log
+

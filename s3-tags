@@ -1,0 +1,11 @@
+#!/bin/sh
+# Sizebay 2016 - S3 Tags
+# Retrieve data store at EC2 instance's tags
+
+instance_id=`curl -s -L http://instance-data/latest/meta-data/instance-id`
+availability_zone=`curl -s -L http://instance-data/latest/meta-data/placement/availability-zone | sed -e 's:\([0-9][0-9]*\)[a-z]*\$:\\1:'`
+
+instance_tag(){
+    aws ec2 describe-tags --filters "Name=resource-id,Values=$instance_id" "Name=key,Values=$1" --region $availability_zone --output=text | cut -f5
+}
+

@@ -1,0 +1,28 @@
+#!/bin/sh
+cd `dirname $0`
+
+. ./s3-tags
+
+# FUNCTIONS
+artifact_root_folder(){
+    unzip -qql $1 | head -n1 | tr -s ' ' | cut -d' ' -f5- | sed 's/\/$//'
+}
+
+# VARIABLES
+app_folder=`artifact_root_folder $1`
+target_folder=/home/ec2-user/application
+start_script=$target_folder/bin/kikaha.sh
+update_script=$target_folder/bin/kikaha-update.sh
+
+if [ -d $target_folder ]; then
+    echo "Updating $instance_id with $1..."
+    chmod +x $update_script
+    $update_script $1
+else
+    echo "Installing $1 into $instance_id..."
+    unzip -x $1
+    mv $app_folder $target_folder
+    chmod +x $start_script
+    $start_script start
+fi
+

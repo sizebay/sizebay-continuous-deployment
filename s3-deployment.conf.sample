@@ -1,0 +1,6 @@
+#!/bin/sh
+# S3 Deployment configuration
+s3_deployment_bucket=sizebay-deployment
+update_script=echo 
+failure_script=echo 
+

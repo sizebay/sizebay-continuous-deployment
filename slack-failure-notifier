@@ -1,0 +1,18 @@
+#!/bin/sh
+cd `dirname $0`
+
+. ./s3-tags
+
+payload=`cat <<EOF
+    {
+        "channel": "#alerts",
+        "username": "Continuous Deployment",
+        "text": "Can't deploy artifact $1 at $instance_id.",
+        "icon_emoji": ":scream:"
+    }
+EOF`
+
+# Sample Slack Hook URL
+hook_url=https://hooks.slack.com/services/XYZ/123/987
+curl -X POST --data-urlencode "payload=$payload" $hook_url > /dev/null
+
